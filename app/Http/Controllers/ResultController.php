@@ -15,12 +15,29 @@ class ResultController extends Controller
      */
     public function index()
     {
-        // Load results with relationships
-        $attempts = \App\Models\Attempt::with(['member', 'quiz'])->get();
-
-        return view('results.index', compact('attempts'));
-
+        $user = auth()->user();
+        if ($user->role === 'admin') {
+        // Admin can see results only for quizzes he created
+        $attempts = \App\Models\Attempt::with(['member', 'quiz'])
+            ->whereHas('quiz', function ($q) use ($user) {
+                $q->where('created_by', $user->id);
+            })
+            ->get();
+    } elseif ($user->role === 'student') {
+        // Student can only see his own attempts
+        $attempts = \App\Models\Attempt::with(['member', 'quiz'])
+            ->where('member_id', $user->id)
+            ->get();
+    } else {
+        // For safety, no results
+        $attempts = collect();
     }
+
+    return view('results.index', compact('attempts'));
+}
+
+
+
 
     /**
      * Store a newly created result in storage.

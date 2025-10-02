@@ -13,8 +13,15 @@ class QuizAttemptController extends Controller
     public function index()
     {
         // Load attempts with related member & quiz
-        $attempts = Attempt::with(['member', 'quiz'])->get();
-        return response()->json($attempts);
+        //$attempts = Attempt::with(['member', 'quiz'])->get();
+        //return response()->json($attempts);
+        $attempts = \App\Models\Attempt::with(['member', 'quiz'])->whereHas('quiz', function($q) {
+        $q->where('created_by', auth()->id()); // ✅ only quizzes created by this admin
+        })
+        ->get();
+        return view('results.index', compact('attempts'));
+
+
     }
 
     //Show the form for creating a new attempt.

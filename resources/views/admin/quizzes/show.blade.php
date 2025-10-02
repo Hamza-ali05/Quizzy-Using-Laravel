@@ -17,7 +17,7 @@
       </tr>
     </thead>
     <tbody>
-      @foreach($quiz->questions as $index => $question)
+      @forelse($quiz->questions as $index => $question)
         <tr>
           <td>{{ $index+1 }}</td>
           <td>{{ $question->questions_text }}</td>
@@ -34,8 +34,17 @@
             @endforeach
           </td>
         </tr>
-      @endforeach
+      @empty
+        <tr>
+          <td colspan="4" class="text-center text-muted">
+            No questions found for this quiz.
+          </td>
+        </tr>
+      @endforelse
     </tbody>
   </table>
+  <form>
+  <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary">Back to Quizzy</a>
+  </form>
 </div>
 @endsection

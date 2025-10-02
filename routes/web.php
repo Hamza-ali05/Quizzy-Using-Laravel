@@ -40,6 +40,7 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('quizzes/{quiz}', [QuizController::class,'show'])->name('quizzes.show');
     Route::get('quizzes/{quiz}/edit', [QuizController::class,'edit'])->name('quizzes.edit');
     Route::put('quizzes/{quiz}', [QuizController::class,'update'])->name('quizzes.update');
+    Route::get('/quizzes/{quiz}/result', [ResultController::class, 'show'])->name('quizzes.result');
     Route::delete('quizzes/{quiz}', [QuizController::class,'destroy'])->name('quizzes.destroy');
 
     // ----- Question Routes (tied to quizzes) -----

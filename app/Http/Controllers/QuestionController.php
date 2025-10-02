@@ -7,13 +7,30 @@ use App\Models\Quiz;
 use Illuminate\Http\Request;
 
 class QuestionController extends Controller{
-    public function index()
+    public function index(Request $request)
     {
+        $quizzes = Quiz::where('created_by', auth()->id())->get();
+        $selectedQuiz = null;
+        $questions = collect(); // empty collection by default
+        if ($request->has('quiz_id')) {
+            $selectedQuiz = Quiz::where('id', $request->quiz_id)->where('created_by', auth()->id())->first();
+            if ($selectedQuiz) {
+                $questions = $selectedQuiz->questions()->with('options')->get();
+            }
+        }
         // all quizzes with questions & options
-        $questions = Question::with('options')->get();
-        $quizzes = Quiz::all();
-        return view('admin.options.index', compact('questions' , 'quizzes'));
-    }
+        // //$questions = Question::with('options')->get();
+        //$quizzes = Quiz::all();
+        // Only quizzes created by this admin
+        $quizzes = \App\Models\Quiz::where('created_by', auth()->id())->get();
+
+    // Only questions from this admin's quizzes
+    $questions = \App\Models\Question::with('options', 'quiz')->whereHas('quiz', function($q) {
+        $q->where('created_by', auth()->id());
+    })
+    ->get();
+    return view('admin.options.index', compact('questions' ,'selectedQuiz', 'quizzes'));
+}
 
     //Show the form for creating a new question.
     public function create(Quiz $quiz)

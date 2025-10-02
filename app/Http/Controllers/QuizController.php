@@ -52,12 +52,23 @@ class QuizController extends Controller
     /**
      * Display the specified quiz.
      */
-    public function show(Quiz $quiz) 
+    
+    /*public function show(Quiz $quiz) 
     {
         $quiz->load('questions.options'); 
         // ✅ fixed: relation is "questions", not "admin.questions"
         return view('admin.quizzes.show', compact('quiz')); 
-    }
+    }*/
+
+        public function show($id)
+{
+    $quiz = \App\Models\Quiz::where('id', $id)
+                ->where('created_by', auth()->id()) // ✅ only quizzes created by logged-in admin
+                ->with('questions.options')
+                ->firstOrFail();
+
+    return view('admin.quizzes.show', compact('quiz'));
+}
 
     /**
      * Show the form for editing the specified quiz.
@@ -95,11 +106,8 @@ class QuizController extends Controller
      */
     public function destroy(Quiz $quiz) 
     { 
-        $quiz->delete(); 
-
-        return response()->json([ 
-            'message' => 'Quiz deleted successfully!' 
-        ]); 
+        $quiz->delete();
+        return redirect()->route('admin.dashboard')->with('success', 'Quiz deleted successfully.');
     } 
 
 }

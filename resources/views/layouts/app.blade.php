@@ -25,6 +25,9 @@
     footer { padding: 18px 0; text-align:center; color:#6b7280; font-size:14px; }
     .nav-link { color: rgba(255,255,255,0.92) !important; }
     .form-label { font-weight:600; }
+    .btn-danger-custom {background-color: #dc3545; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; transition: background-color 0.3s;}
+.btn-danger-custom:hover { background-color: #b02a37; color: #fff;}
+
   </style>
 
   @stack('styles')
