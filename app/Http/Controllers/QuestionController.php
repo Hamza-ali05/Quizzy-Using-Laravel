@@ -18,10 +18,7 @@ class QuestionController extends Controller{
                 $questions = $selectedQuiz->questions()->with('options')->get();
             }
         }
-        // all quizzes with questions & options
-        // //$questions = Question::with('options')->get();
-        //$quizzes = Quiz::all();
-        // Only quizzes created by this admin
+        
         $quizzes = \App\Models\Quiz::where('created_by', auth()->id())->get();
 
     // Only questions from this admin's quizzes

@@ -53,14 +53,7 @@ class QuizController extends Controller
      * Display the specified quiz.
      */
     
-    /*public function show(Quiz $quiz) 
-    {
-        $quiz->load('questions.options'); 
-        // ✅ fixed: relation is "questions", not "admin.questions"
-        return view('admin.quizzes.show', compact('quiz')); 
-    }*/
-
-        public function show($id)
+    public function show($id)
 {
     $quiz = \App\Models\Quiz::where('id', $id)
                 ->where('created_by', auth()->id()) // ✅ only quizzes created by logged-in admin
@@ -70,9 +63,7 @@ class QuizController extends Controller
     return view('admin.quizzes.show', compact('quiz'));
 }
 
-    /**
-     * Show the form for editing the specified quiz.
-     */
+    
     public function edit(Quiz $quiz) 
     { 
         $members = Member::all();
