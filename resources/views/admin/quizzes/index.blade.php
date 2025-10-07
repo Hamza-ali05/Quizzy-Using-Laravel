@@ -12,7 +12,7 @@
             <tr>
                 <th>Title</th>
                 <th>Description</th>
-                <th>Actions</th>
+                
             </tr>
         </thead>
         <tbody>
