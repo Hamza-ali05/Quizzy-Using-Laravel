@@ -3,13 +3,14 @@ namespace App\Http\Controllers; //define controller location
 
 use App\Models\Quiz; //import quiz model 
 use App\Models\Member; //import member model 
+use App\Models\UserAnswer;
+use App\Models\Attempt;
+use App\Models\Result;
 use Illuminate\Http\Request; //import request 
 
 class QuizController extends Controller 
 { 
-    /**
-     * Display a listing of quizzes.
-     */
+    
     public function index() 
     {
         // Load quizzes with their creator (member) 
@@ -18,41 +19,34 @@ class QuizController extends Controller
         return response()->json($quizzes); 
     }
 
-    /**
-     * Show the form for creating a new quiz.
-     */
+   
     public function create() 
     { 
-        // If using Blade views
         $quizzes = Quiz::all();
         return view('admin.quizzes.create'); 
-        //return view('admin.quizzes.create', compact('members')); 
     }
 
-    /**
-     * Store a newly created quiz in storage.
-     */
+    
     public function store(Request $request) 
     {
         $validated = $request->validate([ 
             'title' => 'required|string|max:255', 
-            'description' => 'nullable|string|max:200', 
+            'description' => 'nullable|string|max:200',
+            'duration' => 'required|integer|min:1'
         ]);
 
         $quiz = \App\Models\Quiz::create([
             'title' => $validated['title'], 
-            'description' => $validated['description'] ?? null, 
-            'created_by' => auth()->id(), // ✅ fixed: set automatically 
+            'description' => $validated['description'] ?? null,
+            'duration' => $validated['duration'],
+            'created_by' => auth()->id(), 
         ]); 
 
-        // Redirect admin to add questions for this quiz
+        
         return redirect()->route('questions.create', $quiz->id)->with('success', 'Quiz created successfully! Now add questions.');
     }
 
-    /**
-     * Display the specified quiz.
-     */
-    
+   
     public function show($id)
 {
     $quiz = \App\Models\Quiz::where('id', $id)
@@ -70,20 +64,20 @@ class QuizController extends Controller
         return view('admin.questions.edit', compact('quiz', 'members')); 
     }
 
-    /**
-     * Update the specified quiz in storage.
-     */
+   
     public function update(Request $request, Quiz $quiz) 
     { 
         $request->validate([ 
             'title' => 'required|string|max:150', 
             'description' => 'nullable|string|max:200', 
+            'duration' => 'required|integer|min:1'
         ]);
 
         $quiz->update([ 
             'title' => $request->title, 
             'description' => $request->description, 
-            'created_by' => auth()->id(), // ✅ fixed here too 
+            'duration' => $validated['duration'],
+            'created_by' => auth()->id(), 
         ]); 
 
         return response()->json([ 
@@ -92,9 +86,53 @@ class QuizController extends Controller
         ]); 
     }
 
-    /**
-     * Remove the specified quiz from storage.
-     */
+    public function submit(Request $request, Quiz $quiz)
+{
+    $request->validate(['attempt_id' => 'required|integer']);
+    $attempt = Attempt::findOrFail($request->attempt_id);
+    if ($attempt->member_id !== auth()->id()) abort(403);
+
+    
+    $answers = UserAnswer::where('attempt_id', $attempt->id)->where('quiz_id', $quiz->id)->get()->keyBy('question_id');
+
+    $score = 0;
+    $total = $quiz->questions()->count();
+
+    foreach ($quiz->questions as $question) {
+        $ua = $answers->get($question->id);
+        if (!$ua) {
+            
+            $correct = false;
+            $chosenOptionId = null;
+        } else {
+            $chosenOptionId = $ua->option_id;
+            $correct = \App\Models\Option::where('id', $chosenOptionId)->where('correct_option', 1)->exists();
+            if ($correct) $score++;
+        }
+
+        
+        Result::create([
+            'quiz_id' => $quiz->id,
+            'student_id' => auth()->id(),
+            'question_id' => $question->id,
+            'option_id' => $chosenOptionId,
+            'correct' => (int)$correct,
+        ]);
+    }
+
+   
+    $attempt->marks = $score;
+    $attempt->finished_at = now();
+    $attempt->save();
+
+    
+    if ($request->expectsJson() || $request->input('auto')) {
+        return response()->json(['redirect' => route('quizzes.result', $quiz->id) ]);
+    }
+
+    return redirect()->route('quizzes.result', $quiz->id);
+}
+    
     public function destroy(Quiz $quiz) 
     { 
         $quiz->delete();

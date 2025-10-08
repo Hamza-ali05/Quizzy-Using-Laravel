@@ -12,7 +12,7 @@
       <tr>
         <th>Student</th>
         <th>Quiz</th>
-        <th>Score</th>
+        <th>Score (Out of Total)</th>
         <th>Date</th>
       </tr>
     </thead>
@@ -21,7 +21,7 @@
         <tr>
           <td>{{ optional($attempt->member)->name }}</td>
           <td>{{ optional($attempt->quiz)->title }}</td>
-          <td>{{ $attempt->marks ?? 0 }}</td>
+          <td>{{ $attempt->marks ?? 0 }} / {{ optional($attempt->quiz)->questions->count() ?? 0 }}</td>
           <td>{{ $attempt->created_at->format('d M Y, H:i') }}</td>
         </tr>
       @empty

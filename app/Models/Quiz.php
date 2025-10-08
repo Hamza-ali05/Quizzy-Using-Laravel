@@ -15,6 +15,7 @@ class Quiz extends Model
         'title',
         'description',
         'created_by',
+        'duration',
     ];
 
     public function questions()
@@ -28,7 +29,7 @@ class Quiz extends Model
         return $this->belongsTo(Member::class, 'created_by');
     }
     public function results()
-{
-    return $this->hasMany(Result::class);
-}
+    {
+        return $this->hasMany(Result::class);
+    }
 }

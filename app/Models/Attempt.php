@@ -19,6 +19,13 @@ class Attempt extends Model
         'marks',
     ];
 
+    protected $casts =
+    [
+        'started_at' => 'datetime',
+        'end_at' => 'datetime',
+    ];
+
+
     //attempt related by members
     public function member()
     {

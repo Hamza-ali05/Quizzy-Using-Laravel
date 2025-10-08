@@ -2,75 +2,143 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Quiz;
 use App\Models\Attempt;
 use App\Models\UserAnswer;
-
+use Illuminate\Http\Request; //import reques
 
 class StudentController extends Controller
 {
+    
     public function dashboard()
     {
         $quizzes = \App\Models\Quiz::all();
         $attempts = \App\Models\Attempt::where('member_id', auth()->id())->with('quiz')->get();
         return view('student.dashboard', compact('quizzes', 'attempts'));
     }
-    public function submitAnswer(Request $request, \App\Models\Quiz $quiz, $index)
-    {
-        $student = auth()->user();
-        // create attempt if not exists
-        $attempt = \App\Models\Attempt::firstOrCreate
-        (
-            ['member_id' => $student->id, 'quiz_id' => $quiz->id],
-            ['marks' => 0]
-        );
-        $question = $quiz->questions[$index - 1] ?? null;
-        if (!$question)
-        {
-            return redirect()->route('student.dashboard')->with('error', 'Invalid question.');
+  public function attempt(Quiz $quiz, $index = 1)
+  {
+    $user = auth()->user();
+        $attempt = Attempt::where('member_id', $user->id)->where('quiz_id', $quiz->id)->whereNull('finished_at')->first();
+
+        if ($attempt && $attempt->end_at && $attempt->end_at->isPast()) {
+        return $this->finalizeAttemptAndRedirect($attempt, $quiz);}
+
+        if (!$attempt) {$started = now();
+            $endAt = $started->copy()->addMinutes($quiz->duration ?? 30);
+            $attempt = Attempt::create([
+            'member_id' => $user->id,
+            'quiz_id' => $quiz->id,
+            'started_at' => $started,
+            'end_at' => $endAt,
+            'marks' => null,
+        ]);} else {
+        if ($attempt->end_at && $attempt->end_at->isPast()) {
+            
+            return $this->finalizeAttemptAndRedirect($attempt, $quiz);
         }
-        $chosen = $request->option_id;
-        $isCorrect = $question->options()->where('id', $chosen)->where('correct_option', 1)->exists();
-        if ($isCorrect) 
-        {
-            $attempt->increment('marks');
-        }
-        \App\Models\UserAnswer::create([
-            'member_id'   => $student->id,
+    }
+
+    
+    $question = $quiz->questions()->skip($index - 1)->first();
+    $total = $quiz->questions()->count();
+    $currentIndex = $index;
+    return view('student.attempt', compact('quiz','question','currentIndex','total','attempt'));}
+    public function submitAnswer(Request $request, Quiz $quiz, $index)
+{
+    
+    $request->validate([
+        'option_id' => 'required|integer',
+        'attempt_id' => 'required|integer'
+    ]);
+
+    
+    $attempt = Attempt::findOrFail($request->attempt_id);
+    if ($attempt->member_id !== auth()->id()) abort(403);
+
+   
+    $question = $quiz->questions()->skip($index - 1)->first();
+    if (!$question) abort(404);
+
+   
+    UserAnswer::updateOrCreate(
+        [
+            'member_id'   => auth()->id(),
             'quiz_id'     => $quiz->id,
             'question_id' => $question->id,
-            'option_id'   => $chosen,
             'attempt_id'  => $attempt->id,
-        ]);
-        if ($index < $quiz->questions->count()) {
-            return redirect()->route('quizzes.attempt', [$quiz->id, $index + 1]);
-        }
-        return redirect()->route('student.dashboard')->with('success', 'Quiz finished! Your score has been saved.');
-    }
-    public function attempt(Quiz $quiz, $questionIndex = 1){
-    // find or create attempt for this user + quiz
-
-
-    $attempt = Attempt::firstOrCreate(
+        ],
         [
-            'member_id' => auth()->id(),
-            'quiz_id'   => $quiz->id,
+            'option_id'   => $request->option_id,
         ]
     );
-    $questions = $quiz->questions()->with('options')->get();
-    $total = $questions->count();
-    if ($questionIndex > $total) {
-        // TODO: calculate marks & redirect
-        return redirect()->route('results.index')->with('success', 'Quiz completed!');
+
+    
+    $next = $index + 1;
+
+    if ($next <= $quiz->questions()->count()) {
+        // still more questions
+        return redirect()->route('quizzes.attempt', [$quiz->id, $next]);
     }
-    $question = $questions[$questionIndex - 1];
-    return view('student.attempt', [
-        'quiz' => $quiz,
-        'question' => $question,
-        'currentIndex' => $questionIndex,
-        'total' => $total,
-        'attempt' => $attempt,
-    ]);
+
+   
+    return $this->finalizeAttemptAndRedirect($attempt, $quiz);
 }
+public function autoSubmit(Request $request, Quiz $quiz)
+{
+    $attempt = Attempt::find($request->attempt_id);
+
+    if (!$attempt || $attempt->member_id !== auth()->id()) {
+        abort(403);
+    }
+
+    return $this->finalizeAttemptAndRedirect($attempt, $quiz);
+}
+
+
+    private function finalizeAttemptAndRedirect($attempt, $quiz)
+{
+    
+    $questions = $quiz->questions;
+    $answers = \App\Models\UserAnswer::where('attempt_id', $attempt->id)->get();
+
+    $answeredQuestionIds = $answers->pluck('question_id')->toArray();
+
+    foreach ($questions as $question) {
+        if (!in_array($question->id, $answeredQuestionIds)) {
+            \App\Models\UserAnswer::create([
+                'member_id'   => auth()->id(),
+                'quiz_id'     => $quiz->id,
+                'question_id' => $question->id,
+                'option_id'   => null, // no option selected
+                'attempt_id'  => $attempt->id,
+            ]);
+        }
+    }
+
+    $correctAnswers = 0;
+    $totalQuestions = $quiz->questions()->count();
+
+    foreach ($quiz->questions as $question) {
+        $userAnswer = \App\Models\UserAnswer::where([
+            'attempt_id' => $attempt->id,
+            'question_id' => $question->id,
+        ])->first();
+
+        $correctOption = $question->options()->where('correct_option', 1)->first();
+
+        if ($userAnswer && $correctOption && $userAnswer->option_id == $correctOption->id) {
+            $correctAnswers++;
+        }
+    }
+
+    $score = $correctAnswers;
+
+    $attempt->update([
+        'marks' => $score,
+        'finished_at' => now(),
+    ]);
+    return redirect()->route('results.index')->with('success', '⏰ Time expired — your quiz was auto-submitted. You scored '. $score . ' out of ' . $totalQuestions . '.');
+}
+
 }

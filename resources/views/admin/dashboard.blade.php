@@ -55,7 +55,7 @@
     <div class="card p-3 card-accent">
       <h6>Quick Actions</h6>
       <div class="d-grid gap-2"> 
-        <a class="btn btn-primary-custom" href="{{ route('results.index') }}">View Results</a>
+        <a class="btn btn-primary-custom" href="{{ route('admin.results') }}">View Results</a>
         <a class="btn btn-primary-custom" href="{{ route('questions.index') }}">Manage Questions</a>
       </div>
     </div>

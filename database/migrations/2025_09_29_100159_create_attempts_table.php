@@ -16,6 +16,8 @@ return new class extends Migration
             $table->unsignedBigInteger('member_id');//foreign key
             $table->unsignedBigInteger('quiz_id');//foreign key
             $table->integer('marks');
+            $table->timestamp('started_at')->nullable();
+            $table->timestamp('end_at')->nullable();
             $table->timestamps();
 
 

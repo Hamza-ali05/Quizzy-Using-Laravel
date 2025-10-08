@@ -10,20 +10,18 @@ use App\Models\Option;
 
 class ResultController extends Controller
 {
-    /**
-     * Display a listing of results.
-     */
+
     public function index()
     {
         $user = auth()->user();
         if ($user->role === 'admin') {
         // Admin can see results only for quizzes he created
-        $attempts = \App\Models\Attempt::with(['member', 'quiz'])
-            ->whereHas('quiz', function ($q) use ($user) {
-                $q->where('created_by', $user->id);
-            })
-            ->get();
-    } elseif ($user->role === 'student') {
+        $attempts = \App\Models\Attempt::with(['member', 'quiz'])->whereHas('quiz', function ($q) use ($user) {
+            $q->where('created_by', $user->id);
+        })
+        ->get();
+    }
+    elseif ($user->role === 'student') {
         // Student can only see his own attempts
         $attempts = \App\Models\Attempt::with(['member', 'quiz'])
             ->where('member_id', $user->id)
@@ -36,12 +34,6 @@ class ResultController extends Controller
     return view('results.index', compact('attempts'));
 }
 
-
-
-
-    /**
-     * Store a newly created result in storage.
-     */
     public function store(Request $request, Quiz $quiz)
     {
         $student = auth()->user();
@@ -65,9 +57,6 @@ class ResultController extends Controller
      return view('student.results.show', compact('score', 'total'));
     }
 
-    /**
-     * Display the specified result.
-     */
     public function show($id)
     {
         $result = Result::with(['attempt', 'question', 'option'])->findOrFail($id);
@@ -75,9 +64,6 @@ class ResultController extends Controller
         return view('results.show', compact('result'));
     }
 
-    /**
-     * Remove the specified result from storage.
-     */
     public function destroy($id)
     {
         $result = Result::findOrFail($id);

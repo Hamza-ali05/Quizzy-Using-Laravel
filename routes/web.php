@@ -40,15 +40,14 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('quizzes/{quiz}', [QuizController::class,'show'])->name('quizzes.show');
     Route::get('quizzes/{quiz}/edit', [QuizController::class,'edit'])->name('quizzes.edit');
     Route::put('quizzes/{quiz}', [QuizController::class,'update'])->name('quizzes.update');
-    Route::get('/quizzes/{quiz}/result', [ResultController::class, 'show'])->name('quizzes.result');
     Route::delete('quizzes/{quiz}', [QuizController::class,'destroy'])->name('quizzes.destroy');
+    Route::get('/results', [ResultController::class, 'index'])->name('results.index');
 
     // ----- Question Routes (tied to quizzes) -----
     Route::get('quizzes/{quiz}/questions/create', [QuestionController::class, 'create'])->name('questions.create');
     Route::post('quizzes/{quiz}/questions', [QuestionController::class, 'store'])->name('questions.store');
 
     //Questions Management
-    
     Route::get('questions', [QuestionController::class,'index'])->name('questions.index');
     Route::get('questions/{question}/edit', [QuestionController::class,'edit'])->name('questions.edit');
     Route::put('questions/{question}', [QuestionController::class,'update'])->name('questions.update');
@@ -65,21 +64,21 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     
 
     // ----- Result Routes -----
-    Route::get('results', [ResultController::class, 'index'])->name('results.index');
+    Route::get('results', [ResultController::class, 'index'])->name('admin.results');
 });
 
 // =====================
 // Student Routes
 // =====================
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth'])->prefix('student')->group(function () {
     Route::get('/student/dashboard', [StudentController::class, 'dashboard'])->name('student.dashboard');
     Route::get('/quizzes/{quiz}/attempt/{index?}', [StudentController::class, 'attempt'])->name('quizzes.attempt');
     Route::post('/quizzes/{quiz}/attempt/{index}', [StudentController::class, 'submitAnswer'])->name('quizzes.submitAnswer');
-    Route::post('/quizzes/{quiz}/submit', [QuizController::class, 'submit'])->name('quizzes.submit');
-    Route::get('/quizzes/{quiz}/result', [ResultController::class, 'show'])->name('quizzes.result');
+    Route::get('/results', [ResultController::class, 'index'])->name('results.index');
+    Route::post('/quizzes/{quiz}/auto-submit', [StudentController::class, 'autoSubmit'])->name('quizzes.autoSubmit');
+
+    
 });
-
-
 
 // =====================
 // Shared Routes (Admins & Students)

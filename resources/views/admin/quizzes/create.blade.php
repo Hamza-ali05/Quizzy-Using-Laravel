@@ -35,6 +35,13 @@
             <textarea name="description" id="description" class="form-control">{{ old('description') }}</textarea>
         </div>
 
+        <div class="mb-3">
+            <label for="duration" class="form-label">Duration (minutes)</label>
+            <input type="number" name="duration" id="duration" class="form-control" min="1" value="{{ old('duration', 30) }}" required>
+            <small class="text-muted">Set how long students have to finish the quiz.</small>
+        </div>
+
+
         <button type="submit" class="btn btn-primary">Create Quiz</button>
         <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary">Back to Quizzy</a>
     </form>

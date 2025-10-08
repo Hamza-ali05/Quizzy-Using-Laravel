@@ -42,11 +42,11 @@ class QuestionController extends Controller{
             'options.*.text' => 'required|string|max:255',
             'correct_option' => 'required|integer',
         ]);
-        // ✅ save question using correct column
+        
         $question = $quiz->questions()->create([
             'questions_text' => $request->text,
         ]);
-        // ✅ save options using correct column
+        
         foreach ($request->options as $i => $opt)
         {
             $question->options()->create([
@@ -81,16 +81,16 @@ class QuestionController extends Controller{
             'correct_option' => 'required|integer',
         ]);
 
-    // ✅ update question
+    
     $question->update([
         'quiz_id' => $request->quiz_id,
         'questions_text' => $request->questions_text,
     ]);
 
-    // ✅ delete old options before re-adding
+    
     $question->options()->delete();
 
-    // ✅ add updated options
+    
     foreach ($request->options as $i => $opt) 
     {
         $question->options()->create([
@@ -102,13 +102,13 @@ class QuestionController extends Controller{
 }
 public function destroy(Question $question)
 {
-    // delete related options first (to avoid orphan rows, if cascade not set)
+    
     $question->options()->delete();
 
-    // delete the question itself
+    
     $question->delete();
 
-    // redirect back to Manage Questions page with a success message
+    
     return redirect()->route('questions.index')->with('success', 'Question deleted successfully!');
 }
 }
