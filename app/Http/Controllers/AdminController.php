@@ -10,8 +10,8 @@ class AdminController extends Controller
     // Show the admin dashboard with all quizzes
     public function dashboard()
     {
-        //$quizzes = Quiz::with('creator')->get();
-        $quizzes = \App\Models\Quiz::where('created_by', auth()->id())->get();
+        
+        $quizzes = Quiz::where('created_by', auth()->id())->get();
         return view('admin.dashboard', compact('quizzes'));
     }
     

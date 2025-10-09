@@ -12,8 +12,8 @@ class QuizAttemptController extends Controller
     //Display a listing of attempts.
     public function index()
     {
-        $attempts = \App\Models\Attempt::with(['member', 'quiz'])->whereHas('quiz', function($q) {
-        $q->where('created_by', auth()->id()); // ✅ only quizzes created by this admin
+        $attempts = Attempt::with(['member', 'quiz'])->whereHas('quiz', function($q) {
+        $q->where('created_by', auth()->id()); 
         })
         ->get();
         return view('results.index', compact('attempts'));

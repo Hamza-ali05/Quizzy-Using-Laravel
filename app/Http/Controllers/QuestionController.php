@@ -19,10 +19,10 @@ class QuestionController extends Controller{
             }
         }
         
-        $quizzes = \App\Models\Quiz::where('created_by', auth()->id())->get();
+        $quizzes = Quiz::where('created_by', auth()->id())->get();
 
     // Only questions from this admin's quizzes
-    $questions = \App\Models\Question::with('options', 'quiz')->whereHas('quiz', function($q) {
+    $questions = Question::with('options', 'quiz')->whereHas('quiz', function($q) {
         $q->where('created_by', auth()->id());
     })
     ->get();

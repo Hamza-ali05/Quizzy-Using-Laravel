@@ -12,8 +12,8 @@ class StudentController extends Controller
     
     public function dashboard()
     {
-        $quizzes = \App\Models\Quiz::all();
-        $attempts = \App\Models\Attempt::where('member_id', auth()->id())->with('quiz')->get();
+        $quizzes = Quiz::all();
+        $attempts = Attempt::where('member_id', auth()->id())->with('quiz')->get();
         return view('student.dashboard', compact('quizzes', 'attempts'));
     }
   public function attempt(Quiz $quiz, $index = 1)
@@ -100,13 +100,13 @@ public function autoSubmit(Request $request, Quiz $quiz)
 {
     
     $questions = $quiz->questions;
-    $answers = \App\Models\UserAnswer::where('attempt_id', $attempt->id)->get();
+    $answers = UserAnswer::where('attempt_id', $attempt->id)->get();
 
     $answeredQuestionIds = $answers->pluck('question_id')->toArray();
 
     foreach ($questions as $question) {
         if (!in_array($question->id, $answeredQuestionIds)) {
-            \App\Models\UserAnswer::create([
+            UserAnswer::create([
                 'member_id'   => auth()->id(),
                 'quiz_id'     => $quiz->id,
                 'question_id' => $question->id,
@@ -120,7 +120,7 @@ public function autoSubmit(Request $request, Quiz $quiz)
     $totalQuestions = $quiz->questions()->count();
 
     foreach ($quiz->questions as $question) {
-        $userAnswer = \App\Models\UserAnswer::where([
+        $userAnswer = UserAnswer::where([
             'attempt_id' => $attempt->id,
             'question_id' => $question->id,
         ])->first();

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;//define controller location
 
+use App\Models\Quiz;//import quiz model
 use App\Models\Option;//import option model
 use App\Models\Question;//import question model
 use Illuminate\Http\Request;//import request
@@ -11,8 +12,8 @@ class OptionController extends Controller
     //display the options
     public function index()
     {
-       $quizzes = \App\Models\Quiz::with('questions.options')->get();
-       $questions = \App\Models\Question::with('options','quiz')->get();
+       $quizzes = Quiz::with('questions.options')->get();
+       $questions = Question::with('options','quiz')->get();
        return view('admin.options.index', compact('quizzes', 'questions'));
 
     }

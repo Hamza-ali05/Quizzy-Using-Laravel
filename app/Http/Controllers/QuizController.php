@@ -6,6 +6,7 @@ use App\Models\Member; //import member model
 use App\Models\UserAnswer;
 use App\Models\Attempt;
 use App\Models\Result;
+use App\Models\Option;
 use Illuminate\Http\Request; //import request 
 
 class QuizController extends Controller 
@@ -35,7 +36,7 @@ class QuizController extends Controller
             'duration' => 'required|integer|min:1'
         ]);
 
-        $quiz = \App\Models\Quiz::create([
+        $quiz = Quiz::create([
             'title' => $validated['title'], 
             'description' => $validated['description'] ?? null,
             'duration' => $validated['duration'],
@@ -49,8 +50,8 @@ class QuizController extends Controller
    
     public function show($id)
 {
-    $quiz = \App\Models\Quiz::where('id', $id)
-                ->where('created_by', auth()->id()) // ✅ only quizzes created by logged-in admin
+    $quiz = Quiz::where('id', $id)
+                ->where('created_by', auth()->id()) 
                 ->with('questions.options')
                 ->firstOrFail();
 
@@ -106,7 +107,7 @@ class QuizController extends Controller
             $chosenOptionId = null;
         } else {
             $chosenOptionId = $ua->option_id;
-            $correct = \App\Models\Option::where('id', $chosenOptionId)->where('correct_option', 1)->exists();
+            $correct = Option::where('id', $chosenOptionId)->where('correct_option', 1)->exists();
             if ($correct) $score++;
         }
 
